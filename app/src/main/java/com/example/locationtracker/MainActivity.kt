@@ -26,6 +26,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        handlePermission()
+
+        binding.refreshButton.setOnClickListener {
+            getLocation()
+        }
+        binding.logoutButton.setOnClickListener {
+            stopService(Intent(this, LocationService::class.java))
+            Pref.setBooleanValue(this, "login_key", false)
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun handlePermission() {
         if (checkPermission()) {
             if (Utils.locationEnabled(this)) {
                 ContextCompat.startForegroundService(
@@ -65,16 +79,6 @@ class MainActivity : AppCompatActivity() {
                 .check()
 
 
-        }
-
-        binding.refreshButton.setOnClickListener {
-            getLocation()
-        }
-        binding.logoutButton.setOnClickListener {
-            stopService(Intent(this, LocationService::class.java))
-            Pref.setBooleanValue(this, "login_key", false)
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
         }
     }
 
