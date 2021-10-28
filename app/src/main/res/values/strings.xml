@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">LocationTracker</string>
+    <string name="label_name">Name</string>
+    <string name="label_phone">Phone</string>
+    <string name="login">Login</string>
+    <string name="btn_logout">Logout</string>
+    <string name="label_refresh">Refresh</string>
+</resources>
