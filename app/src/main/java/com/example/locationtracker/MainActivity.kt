@@ -29,6 +29,12 @@ class MainActivity : AppCompatActivity() {
         handlePermission()
 
         binding.refreshButton.setOnClickListener {
+            Toast.makeText(
+                this@MainActivity,
+                getString(R.string.wait_message),
+                Toast.LENGTH_SHORT
+            )
+                .show()
             getLocation()
         }
         binding.logoutButton.setOnClickListener {
@@ -44,21 +50,29 @@ class MainActivity : AppCompatActivity() {
             if (Utils.locationEnabled(this)) {
                 ContextCompat.startForegroundService(
                     this,
-                    Intent(this, LocationService::class.java)
-                )
+                    Intent(this, LocationService::class.java))
+                getLocation()
             } else {
-                Toast.makeText(this@MainActivity, "Permission Enable GPS", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this@MainActivity,
+                    getString(R.string.gps_error_message),
+                    Toast.LENGTH_SHORT
+                )
                     .show()
+                binding.progressBar.visibility = View.GONE
+                binding.currentLocationText.text = getString(R.string.gps_error_message)
             }
         } else {
             val permissionListener: PermissionListener = object : PermissionListener {
                 override fun onPermissionGranted() {
-                    Toast.makeText(this@MainActivity, "Permission Granted", Toast.LENGTH_SHORT)
-                        .show()
                     startLocationService()
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        getLocation()
-                    }, 5000)
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.wait_message),
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                    getLocation()
                 }
 
                 override fun onPermissionDenied(deniedPermissions: List<String>) {
@@ -67,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                         "Permission Denied\n$deniedPermissions",
                         Toast.LENGTH_SHORT
                     ).show()
+                    binding.progressBar.visibility = View.GONE
                 }
             }
             TedPermission.with(this)
@@ -80,11 +95,6 @@ class MainActivity : AppCompatActivity() {
 
 
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        getLocation()
     }
 
     private fun startLocationService() {
@@ -107,31 +117,44 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getLocation() {
-        var result = ""
-        try {
-            val fileName = "location_data.txt"
-            if (File(filesDir.absolutePath, fileName).exists()) {
-                val inputStream: InputStream? = openFileInput(fileName)
-                if (inputStream != null) {
-                    val inputStreamReader = InputStreamReader(inputStream)
-                    val bufferedReader = BufferedReader(inputStreamReader)
-                    var temp: String?
-                    val stringBuilder = StringBuilder()
-                    while (bufferedReader.readLine().also { temp = it } != null) {
-                        stringBuilder.append(temp)
-                        stringBuilder.append("\n")
+        if (checkPermission() && Utils.locationEnabled(this)) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                var result = ""
+                try {
+                    val fileName = "location_data.txt"
+                    if (File(filesDir.absolutePath, fileName).exists()) {
+                        val inputStream: InputStream? = openFileInput(fileName)
+                        if (inputStream != null) {
+                            val inputStreamReader = InputStreamReader(inputStream)
+                            val bufferedReader = BufferedReader(inputStreamReader)
+                            var temp: String?
+                            val stringBuilder = StringBuilder()
+                            while (bufferedReader.readLine().also { temp = it } != null) {
+                                stringBuilder.append(temp)
+                                stringBuilder.append("\n")
+                            }
+                            inputStream.close()
+                            result = stringBuilder.toString()
+                        }
                     }
-                    inputStream.close()
-                    result = stringBuilder.toString()
-                }
-            }
 
-        } catch (e: NoSuchFileException) {
-            e.printStackTrace()
+                } catch (e: NoSuchFileException) {
+                    e.printStackTrace()
+                }
+                binding.currentLocationText.text =
+                    if (result.isBlank()) "Location Not Available, Try to refresh" else result
+                binding.progressBar.visibility = View.GONE
+            }, 4000)
+
+        } else {
+            binding.progressBar.visibility = View.GONE
+            Toast.makeText(
+                this@MainActivity,
+                getString(R.string.gps_error_message),
+                Toast.LENGTH_SHORT
+            )
+                .show()
         }
-        binding.currentLocationText.text =
-            if (result.isBlank()) "Error Fetching Location" else result
-        binding.progressBar.visibility = View.GONE
     }
 
 

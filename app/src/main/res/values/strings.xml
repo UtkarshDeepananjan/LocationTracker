@@ -5,4 +5,6 @@
     <string name="login">Login</string>
     <string name="btn_logout">Logout</string>
     <string name="label_refresh">Refresh</string>
+    <string name="gps_error_message">GPS is off. Please enable and refresh</string>
+    <string name="wait_message">Please Wait, Fetching location</string>
 </resources>
